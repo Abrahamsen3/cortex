@@ -1,0 +1,4 @@
+.git/
+.venv/
+
+src/cortex/__pycache__/
