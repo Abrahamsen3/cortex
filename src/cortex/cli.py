@@ -2,32 +2,30 @@
 
 from __future__ import annotations
 
-import ollama
-import sys
+from cortex.agent import Agent
+from cortex.system_prompt import SYSTEM_PROMPT
+from cortex.tools.shell import runShell
 
-#print(ollama.show('llama3:latest'))
+MODEL = "qwen3:30b"
+
+
+def isConfirmed(question: str) -> bool:
+    while True:
+        answer = input(f"{question} [y/n]").strip().lower()
+        if answer in ("y", "yes"):
+            return True
+        if answer in ("n", "no"):
+            return False
+
 
 def main() -> int:
-    if len(sys.argv) < 2:
-        print('Usage: cortex "your question here"')
-        return 2
-
-    prompt = " ".join(sys.argv[1:])
-
-    stream = ollama.chat(
-        model='llama3:latest',
-        messages=[{'role': 'user', 'content': prompt}],
-        stream=True,
-    )
-
-    for chunk in stream:
-        message = chunk['message']
-        content = message['content']
-        if not isinstance(content, str):
-            return 1
-        print(content, end='', flush=True)
-
+    user_msg = input("> ").strip()
+    agent = Agent(MODEL, [runShell], SYSTEM_PROMPT)
+    session = agent.initSession()
+    response = agent.runTurn(session, user_msg)
+    print(response)
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
