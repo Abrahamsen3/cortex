@@ -13,9 +13,14 @@ def main() -> int:
     agent = Agent(MODEL, [runShell], SYSTEM_PROMPT)
     session = agent.initSession()
     while True:
-        user_msg = input("> ").strip()
-        response = agent.runTurn(session, user_msg)
-        print(response)
+        try:
+            user_msg = input("> ").strip()
+            if user_msg.lower() == "quit":
+                break
+            response = agent.runTurn(session, user_msg)
+            print(response)
+        except KeyboardInterrupt:
+            print("Exiting...")
     return 0
 
 

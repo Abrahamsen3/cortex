@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import json
 from typing import Any, Callable
 
 import ollama
 
 from cortex.approval import isConfirmed
 from cortex.session import Session
-from cortex.tools.shell import runShell
 
 
 class Agent:
@@ -29,7 +27,7 @@ class Agent:
         content = ""
         tool_calls = True
 
-        while tool_calls != None:
+        while tool_calls:
             response = ollama.chat(
                 model=self.model,
                 messages=session.messages,
@@ -43,26 +41,28 @@ class Agent:
             session.messages.append(
                 {
                     "role": "assistant",
-                    "content": response.message.content,
+                    "content": content,
                     "tool_calls": tool_calls,
                 }
             )
 
-            if content != "":
-                break
-
-            print("proposed commands:")
-            for tool_call in tool_calls:
-                print(" ", tool_call.function.arguments["cmd"])
-
-            if isConfirmed("run proposed commands?"):
+            if tool_calls:
+                print("proposed commands:")
                 for tool_call in tool_calls:
-                    tool_name = tool_call.function.name
-                    tool_args = tool_call.function.arguments
+                    print(" ", tool_call.function.arguments["cmd"])
 
-                    fn = self.tool_map.get(tool_name)
-                    result = fn(**tool_args)
+                if isConfirmed("run proposed commands?"):
+                    for tool_call in tool_calls:
+                        tool_name = tool_call.function.name
+                        tool_args = tool_call.function.arguments
 
-                    session.add("tool", result)
+                        fn = self.tool_map.get(tool_name)
+
+                        try:
+                            result = fn(**tool_args)
+                        except Exception as e:
+                            result = f"Error executing tool: {str(e)}"
+
+                        session.add("tool", result)
 
         return content
