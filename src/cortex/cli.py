@@ -25,8 +25,7 @@ def main() -> int:
                 for msg in session.messages:
                     print(msg)
                 continue
-            response = agent.runTurn(session, user_msg)
-            print(response)
+            agent.runTurn(session, user_msg)
         except KeyboardInterrupt:
             print("\nExiting...")
             break

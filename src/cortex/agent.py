@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Iterator
+from typing import Any, Callable, Tuple
 
 import ollama
 
@@ -62,24 +63,50 @@ class Agent:
                     "User wants to add to the conversation instead of running the tool now.",
                 )
                 return 2
+        return 3
 
-    def runTurn(self, session: Session, user_msg: str) -> Any:
+    def streamResponse(
+        self, response: Iterator[ollama.ChatResponse]
+    ) -> Tuple[str, str, list]:
+        content = ""
+        thinking = ""
+        tool_calls = []
+        in_thinking = False
+        for chunk in response:
+            if chunk.message.thinking:
+                if not in_thinking:
+                    in_thinking = True
+                    print("Thinking:\n", end="", flush=True)
+                print(chunk.message.thinking, end="", flush=True)
+                thinking += chunk.message.thinking
+            if chunk.message.content:
+                if in_thinking:
+                    in_thinking = False
+                    print("\n\nAnswer:\n", end="", flush=True)
+                print(chunk.message.content, end="", flush=True)
+                content += chunk.message.content
+            if chunk.message.tool_calls:
+                tool_calls.extend(chunk.message.tool_calls)
+        print()
+        return content, thinking, tool_calls
+
+    def runTurn(self, session: Session, user_msg: str) -> None:
         session.add("user", user_msg)
         content = ""
+        thinking = ""
         tool_calls = True
 
-        while tool_calls:
+        while content == "":
             response = ollama.chat(
                 model=self.model,
                 messages=session.messages,
                 tools=self.tools,
-                stream=False,
+                stream=True,
+                think=True,
                 keep_alive=self.keep_alive,
             )
 
-            content = response.message.content
-            thinking = response.message.thinking
-            tool_calls = response.message.tool_calls
+            content, thinking, tool_calls = self.streamResponse(response)
 
             session.add("assistant", content, thinking=thinking, tool_calls=tool_calls)
 
@@ -87,5 +114,3 @@ class Agent:
 
             if tool_response == 2:
                 break
-
-        return content
