@@ -6,15 +6,27 @@ import ollama
 
 from cortex.agent import Agent
 from cortex.system_prompt import SYSTEM_PROMPT
+from cortex.tools.editor import (get_lsp_diagnostics, read_file, replace_text,
+                                 write_file)
 from cortex.tools.shell import runShell
 
-MODEL = "qwen3:30b"
+MODEL = "qwen3.5:35b"
 
 
 def main() -> int:
-    agent = Agent(MODEL, [runShell], SYSTEM_PROMPT)
+    tools = [
+        runShell,
+        read_file,
+        write_file,
+        get_lsp_diagnostics,
+        replace_text,
+    ]
+
+    agent = Agent(MODEL, tools, SYSTEM_PROMPT)
     session = agent.initSession()
-    ollama.chat(model=MODEL, keep_alive="5m")
+
+    ollama.chat(model=MODEL, keep_alive=-1)
+
     while True:
         try:
             user_msg = input("> ").strip()

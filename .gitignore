@@ -2,3 +2,4 @@
 .venv/
 
 src/cortex/__pycache__/
+src/cortex/tools/__pycache__/
