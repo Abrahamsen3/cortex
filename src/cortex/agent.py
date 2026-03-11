@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 
 import ollama
 
@@ -69,10 +69,10 @@ class Agent:
 
     def _streamResponse(
         self, response: Iterator[ollama.ChatResponse]
-    ) -> Tuple[str, str, list]:
+    ) -> tuple[str, str, list[Any]]:
         content = ""
         thinking = ""
-        tool_calls: list = []
+        tool_calls: list[Any] = []
         in_thinking = False
         for chunk in response:
             if chunk.message.thinking:
@@ -96,7 +96,7 @@ class Agent:
         session.add("user", user_msg)
         content = ""
         thinking = ""
-        tool_calls: list = True
+        tool_calls = True
 
         while tool_calls:
             response = ollama.chat(

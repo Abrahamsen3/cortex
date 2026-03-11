@@ -6,8 +6,8 @@ import ollama
 
 from cortex.agent import Agent
 from cortex.system_prompt import SYSTEM_PROMPT
-from cortex.tools.editor import (get_lsp_diagnostics, read_file, replace_text,
-                                 write_file)
+from cortex.tools.editor.api import (get_lsp_diagnostics, read_file,
+                                     replace_text, write_file)
 from cortex.tools.shell import runShell
 
 MODEL = "qwen3.5:35b"
